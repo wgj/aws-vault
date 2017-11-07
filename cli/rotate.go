@@ -6,6 +6,7 @@ import (
 	"github.com/99designs/aws-vault/prompt"
 	"github.com/99designs/aws-vault/vault"
 	"github.com/99designs/keyring"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -44,10 +45,14 @@ func RotateCommand(app *kingpin.Application, input RotateCommandInput) {
 		Config:    awsConfig,
 	}
 
-	fmt.Printf("Rotating credentials for profile %q\n", input.Profile)
+	fmt.Printf("Rotating credentials for profile %q (takes 10-20 seconds)\n", input.Profile)
 
 	if err := rotator.Rotate(input.Profile); err != nil {
-		app.Fatalf(awsConfig.FormatCredentialError(err, input.Profile))
+		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "AccessDenied" {
+			app.Fatalf("AccessDenied: Check your credentials have permission to list and update access keys. See https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_examples_iam_credentials_console.html for more details.")
+		} else {
+			app.Fatalf(awsConfig.FormatCredentialError(err, input.Profile))
+		}
 		return
 	}
 
