@@ -5,6 +5,7 @@ GOVERSION=$(shell go version)
 GOBIN=$(shell go env GOBIN)
 VERSION=$(shell git describe --tags --candidates=1 --dirty)
 FLAGS=-X main.Version=$(VERSION) -s -w
+DEBUG_FLAGS=-X main.Version=$(VERSION)
 CERT="Developer ID Application: 99designs Inc (NRM9HVJ62Z)"
 SRC=$(shell find . -name '*.go')
 
@@ -25,6 +26,9 @@ $(BIN)-linux-amd64: $(SRC)
 
 $(BIN)-darwin-amd64: $(SRC)
 	GOOS=darwin GOARCH=amd64 go build -o $@ -ldflags="$(FLAGS)" .
+
+$(BIN)-darwin-amd64-debug: $(SRC)
+	GOOS=darwin GOARCH=amd64 go build -o $@ -ldflags="$(DEBUG_FLAGS)" .
 
 $(BIN)-windows-386.exe: $(SRC)
 	GOOS=windows GOARCH=386 go build -o $@ -ldflags="$(FLAGS)" .
